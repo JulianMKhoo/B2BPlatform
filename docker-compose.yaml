@@ -1,0 +1,107 @@
+version: "3.8"
+
+services:
+  # ----------------------------------------
+  # Databases & Infrastructure
+  # ----------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: b2b_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: b2b_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d b2b_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - b2b_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: b2b_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - b2b_network
+
+  # ----------------------------------------
+  # Backend Services
+  # ----------------------------------------
+  dotnet-api:
+    build:
+      context: ./dotnet-api
+      dockerfile: B2BPlatform.API/Dockerfile
+    container_name: b2b_dotnet_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__WRITE=Host=postgres;Port=5432;Username=admin;Password=password123;Database=b2b_platform
+      - ConnectionStrings__READ=Host=postgres;Port=5432;Username=admin;Password=password123;Database=b2b_platform;Options=-c default_transaction_read_only=on
+      - ConnectionStrings__REDIS=redis:6379
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - b2b_network
+
+  go-chat:
+    build:
+      context: ./go-chat
+      dockerfile: Dockerfile
+    container_name: b2b_go_chat
+    environment:
+      - APP_ENV=development
+      - REDIS_URL=redis:6379
+      - DB_DSN=postgres://admin:password123@postgres:5432/b2b_platform?sslmode=disable
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - b2b_network
+
+  # ----------------------------------------
+  # Frontend
+  # ----------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5001
+        - NEXT_PUBLIC_CHAT_API_URL=http://localhost:8081
+    container_name: b2b_frontend
+    env_file:
+      - ./frontend/.env.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dotnet-api
+      - go-chat
+    restart: unless-stopped
+    networks:
+      - b2b_network
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  b2b_network:
+    driver: bridge

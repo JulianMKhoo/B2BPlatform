@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Infrastructure/B2BPlatform.Infrastructure.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Shared/B2BPlatform.Shared.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.Authentications/B2BPlatform.Services.Authentications.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.Chats/B2BPlatform.Services.Chats.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.BusinessUnit/B2BPlatform.Services.BusinessUnit.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.Company/B2BPlatform.Services.Company.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.CompanyOwner/B2BPlatform.Services.CompanyOwner.csproj"/></ItemGroup>
+    <ItemGroup><ProjectReference Include="../B2BPlatform.Services.Employees/B2BPlatform.Services.Employees.csproj"/></ItemGroup>
+</Project>
